@@ -155,7 +155,7 @@ impl Decodable for Value {
                 let bytes = <[u8; 33]>::consensus_decode(&mut d)?;
                 Ok(Value::Confidential(PedersenCommitment::from_slice(&bytes)?))
             }
-            p => return Err(encode::Error::InvalidConfidentialPrefix(p)),
+            p => Err(encode::Error::InvalidConfidentialPrefix(p)),
         }
     }
 }
@@ -355,7 +355,7 @@ impl Decodable for Asset {
                 let bytes = <[u8; 33]>::consensus_decode(&mut d)?;
                 Ok(Asset::Confidential(Generator::from_slice(&bytes)?))
             }
-            p => return Err(encode::Error::InvalidConfidentialPrefix(p)),
+            p => Err(encode::Error::InvalidConfidentialPrefix(p)),
         }
     }
 }
@@ -566,7 +566,7 @@ impl Decodable for Nonce {
                     PublicKey::from_slice(&bytes).map_err(secp256k1_zkp::Error::Upstream)?,
                 ))
             }
-            p => return Err(encode::Error::InvalidConfidentialPrefix(p)),
+            p => Err(encode::Error::InvalidConfidentialPrefix(p)),
         }
     }
 }
