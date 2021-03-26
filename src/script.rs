@@ -1158,8 +1158,6 @@ mod test {
         assert!(script_2 < script_3);
         assert!(script_3 < script_4);
 
-        assert_eq!(script_1, script_1);
-
         assert!(script_4 > script_3);
         assert!(script_3 > script_2);
         assert!(script_2 > script_1);
