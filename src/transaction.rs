@@ -404,6 +404,11 @@ impl std::error::Error for ConfidentialTxOutError {
     }
 }
 
+impl From<secp256k1_zkp::Error> for ConfidentialTxOutError {
+    fn from(from: secp256k1_zkp::Error) -> Self {
+        ConfidentialTxOutError::Upstream(from)
+    }
+}
 
 impl TxOut {
     /// Creates a new confidential output that is **not** the last one in the transaction.
@@ -450,7 +455,7 @@ impl TxOut {
             0,
             52,
             out_asset_commitment,
-        ).map_err(ConfidentialTxOutError::Upstream)?;
+        )?;
 
         let inputs = inputs
             .iter()
@@ -463,7 +468,7 @@ impl TxOut {
             asset.into_tag(),
             out_abf.into_inner(),
             inputs.as_ref(),
-        ).map_err(ConfidentialTxOutError::Upstream)?;
+        )?;
 
         let txout = TxOut {
             asset: out_asset,
@@ -532,7 +537,7 @@ impl TxOut {
             0,
             52,
             out_asset_commitment,
-        ).map_err(ConfidentialTxOutError::Upstream)?;
+        )?;
 
         let surjection_proof = SurjectionProof::new(
             secp,
@@ -540,7 +545,7 @@ impl TxOut {
             asset.into_tag(),
             out_abf.into_inner(),
             surjection_proof_inputs.as_ref(),
-        ).map_err(ConfidentialTxOutError::Upstream)?;
+        )?;
 
         let txout = TxOut {
             asset: out_asset,
