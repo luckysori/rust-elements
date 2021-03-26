@@ -375,8 +375,11 @@ impl Decodable for TxOut {
     }
 }
 
-pub enum TxOutError {
+/// Errors encountered when constructing confidential transaction outputs.
+pub enum ConfidentialTxOutError {
+    /// The address provided does not have a blinding key.
     NoBlindingKeyInAddress,
+    /// Error originated in `secp256k1_zkp`.
     Upstream(secp256k1_zkp::Error),
 }
 
@@ -395,7 +398,7 @@ impl TxOut {
             AssetBlindingFactor,
             ValueBlindingFactor,
         )],
-    ) -> Result<(Self, AssetBlindingFactor, ValueBlindingFactor), TxOutError>
+    ) -> Result<(Self, AssetBlindingFactor, ValueBlindingFactor), ConfidentialTxOutError>
     where
         R: RngCore + CryptoRng,
         C: Signing,
@@ -409,7 +412,7 @@ impl TxOut {
 
         let receiver_blinding_pk = &address
             .blinding_pubkey
-            .ok_or(TxOutError::NoBlindingKeyInAddress)?;
+            .ok_or(ConfidentialTxOutError::NoBlindingKeyInAddress)?;
         let (nonce, shared_secret) = Nonce::new_confidential(rng, secp, receiver_blinding_pk);
 
         let message = RangeProofMessage { asset, bf: out_abf };
@@ -425,7 +428,7 @@ impl TxOut {
             0,
             52,
             out_asset_commitment,
-        ).map_err(TxOutError::Upstream)?;
+        ).map_err(ConfidentialTxOutError::Upstream)?;
 
         let inputs = inputs
             .iter()
@@ -438,7 +441,7 @@ impl TxOut {
             asset.into_tag(),
             out_abf.into_inner(),
             inputs.as_ref(),
-        ).map_err(TxOutError::Upstream)?;
+        ).map_err(ConfidentialTxOutError::Upstream)?;
 
         let txout = TxOut {
             asset: out_asset,
@@ -469,7 +472,7 @@ impl TxOut {
             ValueBlindingFactor,
         )],
         outputs: &[(u64, AssetBlindingFactor, ValueBlindingFactor)],
-    ) -> Result<Self, TxOutError>
+    ) -> Result<Self, ConfidentialTxOutError>
     where
         R: RngCore + CryptoRng,
         C: Signing,
@@ -491,7 +494,7 @@ impl TxOut {
 
         let receiver_blinding_pk = &address
             .blinding_pubkey
-            .ok_or(TxOutError::NoBlindingKeyInAddress)?;
+            .ok_or(ConfidentialTxOutError::NoBlindingKeyInAddress)?;
         let (nonce, shared_secret) = Nonce::new_confidential(rng, secp, receiver_blinding_pk);
 
         let message = RangeProofMessage { asset, bf: out_abf };
@@ -507,7 +510,7 @@ impl TxOut {
             0,
             52,
             out_asset_commitment,
-        ).map_err(TxOutError::Upstream)?;
+        ).map_err(ConfidentialTxOutError::Upstream)?;
 
         let surjection_proof = SurjectionProof::new(
             secp,
@@ -515,7 +518,7 @@ impl TxOut {
             asset.into_tag(),
             out_abf.into_inner(),
             surjection_proof_inputs.as_ref(),
-        ).map_err(TxOutError::Upstream)?;
+        ).map_err(ConfidentialTxOutError::Upstream)?;
 
         let txout = TxOut {
             asset: out_asset,
