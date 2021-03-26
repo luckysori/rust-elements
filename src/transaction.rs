@@ -15,7 +15,7 @@
 //! # Transactions
 //!
 
-use std::{io, fmt};
+use std::{io, fmt, self};
 use std::collections::HashMap;
 
 use bitcoin::{self, VarInt};
@@ -376,12 +376,34 @@ impl Decodable for TxOut {
 }
 
 /// Errors encountered when constructing confidential transaction outputs.
+#[derive(Debug, Clone, Copy)]
 pub enum ConfidentialTxOutError {
     /// The address provided does not have a blinding key.
     NoBlindingKeyInAddress,
     /// Error originated in `secp256k1_zkp`.
     Upstream(secp256k1_zkp::Error),
 }
+
+impl fmt::Display for ConfidentialTxOutError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            ConfidentialTxOutError::NoBlindingKeyInAddress => {
+                write!(f, "address does not include a blinding key")
+            }
+            ConfidentialTxOutError::Upstream(e) => write!(f, "{}", e),
+        }
+    }
+}
+
+impl std::error::Error for ConfidentialTxOutError {
+    fn cause(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ConfidentialTxOutError::NoBlindingKeyInAddress => None,
+            ConfidentialTxOutError::Upstream(e) => Some(e),
+        }
+    }
+}
+
 
 impl TxOut {
     /// Creates a new confidential output that is **not** the last one in the transaction.
